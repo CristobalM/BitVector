@@ -82,7 +82,7 @@ namespace succinct_structures{
     inline bool bitread(uint bitposition){
       auto block_idx = getBlockIndex(bitposition);
       auto r = getPositionInBlock(bitposition);
-      auto block = read_block_pos(block_idx); // read_block_pos mode
+      auto block = read_block_pos(block_idx); // read mode
       return ((block >> (INT_BITS - r)) % 2) == 1;
     }
 

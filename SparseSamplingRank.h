@@ -8,6 +8,8 @@
 #include <array>
 #include <memory>
 
+#include <cstring>
+
 #include "CommonUtility.h"
 #include "AbstractRankPolicy.h"
 
@@ -19,14 +21,13 @@ namespace succinct_structures{
 
   template<class BV>
   class SparseSamplingRank : public AbstractRankPolicy<BV> {
+  protected:
     const static uint s_value = INT_BITS * INT_BITS;
-  private:
+
     std::unique_ptr<uint[]> rank_sample;
 
-
-  protected:
     uint rank(BV &bv, uint i) {
-      if(this->dirty){
+      if(AbstractRankPolicy<BV>::dirty){
         buildRankStructure();
       }
 
@@ -48,29 +49,18 @@ namespace succinct_structures{
       return result;
 
     }
-/* OLD NAIVE BUILD
-    inline void buildRankSample(){
-      auto bv_size = this->bv->getBitsSize();
-      auto rank_sample_sz = bv_size/s_value + (bv_size % s_value == 0 ? 0 : 1) + 1;
-      rank_sample = std::make_unique<uint[]>(rank_sample_sz);
 
-      uint acc_rank = 0;
-      for(uint i = 0; i < bv_size; i++){
-        acc_rank += this->bv->bitread(i+1);
-
-        if(i> 0 && (i+1) % s_value == 0){
-          rank_sample[(i+1) / s_value] = acc_rank;
-        }
-      }
-      rank_sample[rank_sample_sz-1] = acc_rank;
-    }
-*/
-
-    inline void buildRankSample(){
-      auto bv_size = this->bv->getBitsSize();
+    void buildRankSample(){
+      auto bv_size = AbstractRankPolicy<BV>::bv->getBitsSize();
       auto blocks_num = bv_size / INT_BITS + (bv_size % INT_BITS == 0 ? 0 : 1);
       auto rank_sample_sz = bv_size/s_value + (bv_size % s_value == 0 ? 0 : 1) + 1;
-      rank_sample = std::make_unique<uint[]>(rank_sample_sz);
+      if(!rank_sample){
+        rank_sample = std::make_unique<uint[]>(rank_sample_sz);
+      }
+      else{
+        std::memset(rank_sample.get(), 0, rank_sample_sz);
+      }
+
 
       uint acc_rank = 0;
       for(uint i = 0; i < blocks_num; i++){
@@ -80,17 +70,15 @@ namespace succinct_structures{
           rank_sample[rank_sample_idx] = acc_rank;
         }
 
-        auto current_block = this->bv->read_block_pos(i+1);
+        auto current_block = AbstractRankPolicy<BV>::bv->read_block_pos(i+1);
         acc_rank += popcount_uint(current_block);
       }
       rank_sample[rank_sample_sz-1] = acc_rank;
-
-
     }
 
-    void buildRankStructure(){
+    inline void buildRankStructure(){
       buildRankSample();
-      this->dirty = false;
+      AbstractRankPolicy<BV>::dirty = false;
     }
 
     explicit SparseSamplingRank(BV *bv) : AbstractRankPolicy<BV>(bv){}

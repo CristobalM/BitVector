@@ -8,9 +8,10 @@
 #include "BitVector.h"
 #include "NullPolicies.h"
 #include "SparseSamplingRank.h"
+#include "SparseSamplingTwoLevelRank.h"
 
 namespace succinct_structures{
-  template<template<class> class RankPolicy = SparseSamplingRank,
+  template<template<class> class RankPolicy = SparseSamplingTwoLevelRank,
           template<class> class SelectPolicy = NullSelectPolicy>
   class BVManager_ : public RankPolicy<BitVector>, public SelectPolicy<BitVector> {
   private:
@@ -61,7 +62,7 @@ namespace succinct_structures{
     }
 
     void buildRankStructure(){
-      RankPolicy<BitVector>::buildRankSample();
+      RankPolicy<BitVector>::buildRankStructure();
     }
 
   };
