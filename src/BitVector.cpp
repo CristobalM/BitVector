@@ -17,10 +17,5 @@ uint succinct_structures::BitVector::getBVSize() const {
 }
 
 void succinct_structures::BitVector::clearContainer() {
-  /*
-  for (uint i = 0; i < num_of_blocks; i++) {
-    container.get()[i] = 0;
-  }
-   */
   std::memset(container.get(), 0, num_of_blocks);
 }

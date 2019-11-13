@@ -12,16 +12,35 @@ else()
     message("-march=native not supported")
 endif()
 
+include_directories(include)
 
-set(BitVector BitVector.cpp BitVector.h
+set(INCLUDES_FILES
+        BitVector.h
         BVManager.h
         SparseSamplingRank.h
         SparseSamplingTwoLevelRank.h
         NullPolicies.h
-        CommonUtility.h CommonUtility.cpp
+        CommonUtility.h
         AbstractRankPolicy.h
-        AbstractSelectPolicy.h
-        )
+        AbstractSelectPolicy.h)
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O0")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0")
+set(SOURCES_FILES
+        BitVector.cpp
+        CommonUtility.cpp)
+
+set(INCLUDES_PATHS "")
+set(SOURCES_PATHS "")
+
+foreach (header_file IN LISTS INCLUDES_FILES)
+    list(APPEND INCLUDES_PATHS "include/${header_file}")
+endforeach ()
+
+foreach (source_file IN LISTS SOURCES_FILES)
+    list(APPEND SOURCES_PATHS "src/${source_file}")
+endforeach ()
+
+
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
+
+add_library(BitVector ${INCLUDES_PATHS} ${SOURCES_PATHS})
