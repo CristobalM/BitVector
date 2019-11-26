@@ -25,7 +25,7 @@ namespace succinct_structures{
   }
 
   template<typename bv_block_t>
-  BitVector<bv_block_t>::BitVector(std::unique_ptr<bv_block_t> &&container, uint32_t bv_size) :
+  BitVector<bv_block_t>::BitVector(std::unique_ptr<bv_block_t[]> &&container, uint32_t bv_size) :
           container(std::move(container)), bv_size(bv_size) {
     remainder = bv_size % bv_block_bits;
     num_of_blocks = remainder == 0 ? bv_size / bv_block_bits : bv_size / bv_block_bits + 1;

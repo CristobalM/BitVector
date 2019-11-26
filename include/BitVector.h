@@ -40,7 +40,7 @@ namespace succinct_structures{
 
   public:
     explicit BitVector(uint bv_size);
-    explicit BitVector(std::unique_ptr<bv_block_t> &&container, uint32_t bv_size);
+    explicit BitVector(std::unique_ptr<bv_block_t[]> &&container, uint32_t bv_size);
 
     uint getBVSize() const;
     void clearContainer();
