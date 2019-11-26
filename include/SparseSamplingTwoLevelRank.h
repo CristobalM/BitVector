@@ -13,6 +13,8 @@ namespace succinct_structures {
   class SparseSamplingTwoLevelRank : public SparseSamplingRank<BV> {
     using ushort = unsigned short;
     static const uint s_value = SparseSamplingRank<BV>::s_value;
+    static constexpr auto bv_block_bits = BV::bv_block_bits;
+
   protected:
     std::unique_ptr<ushort[]> rank_sample_subblock;
 
@@ -22,7 +24,7 @@ namespace succinct_structures {
       }
 
       auto prev_sample_idx = i / s_value;
-      auto prev_block_idx = i / INT_BITS;
+      auto prev_block_idx = i / bv_block_bits;
 
       auto acc_rank = SparseSamplingRank<BV>::rank_sample[prev_sample_idx];
 
@@ -32,12 +34,12 @@ namespace succinct_structures {
 
       acc_rank += (uint)rank_sample_subblock[prev_block_idx];
 
-      if(i % INT_BITS == 0){
+      if(i % bv_block_bits == 0){
         return acc_rank;
       }
 
-      auto left_remaining_pos = prev_block_idx*INT_BITS + 1;
-      auto right_remaining_pos = left_remaining_pos - 1 + (i % INT_BITS);
+      auto left_remaining_pos = prev_block_idx*bv_block_bits + 1;
+      auto right_remaining_pos = left_remaining_pos - 1 + (i % bv_block_bits);
 
       auto last_read_bits = bv.bitsread(left_remaining_pos, right_remaining_pos);
       auto remaining_count = popcount_uint(last_read_bits);
@@ -49,8 +51,8 @@ namespace succinct_structures {
     void buildRankSample() {
       SparseSamplingRank<BV>::buildRankSample();
       auto bv_size = AbstractRankPolicy<BV>::bv->getBitsSize();
-      auto blocks_num = bv_size / INT_BITS + (bv_size % INT_BITS == 0 ? 0 : 1);
-      auto rank_sb_sample_sz = bv_size / INT_BITS + (bv_size % INT_BITS == 0 ? 0 : 1) + 1;
+      auto blocks_num = bv_size / bv_block_bits + (bv_size % bv_block_bits == 0 ? 0 : 1);
+      auto rank_sb_sample_sz = bv_size / bv_block_bits + (bv_size % bv_block_bits == 0 ? 0 : 1) + 1;
 
       if(!rank_sample_subblock){
         rank_sample_subblock = std::make_unique<ushort[]>(rank_sb_sample_sz);
@@ -61,7 +63,7 @@ namespace succinct_structures {
 
       ushort acc_rank = 0;
       for(uint i = 0; i < blocks_num; i++){
-        auto bv_pos = i * INT_BITS + 1;
+        auto bv_pos = i * bv_block_bits + 1;
         if((bv_pos-1) % s_value == 0){
           acc_rank = 0;
         }

@@ -14,23 +14,24 @@
 #include "CommonUtility.h"
 
 namespace succinct_structures{
-
+  template<typename bv_block_sz = uint32_t >
   class BitVector{
-
   private:
     uint bv_size;
     uint remainder;
     uint num_of_blocks;
 
+    static auto constexpr bv_block_bits = sizeof(bv_block_sz) * 8;
 
-    std::unique_ptr<uint[]> container;
+
+    std::unique_ptr<bv_block_sz[]> container;
 
     inline uint getBlockIndex(uint bitposition){
-      return bitposition % INT_BITS != 0 ? bitposition / INT_BITS + 1 : bitposition / INT_BITS;
+      return bitposition % bv_block_bits != 0 ? bitposition / bv_block_bits + 1 : bitposition / bv_block_bits;
     }
 
     inline uint getPositionInBlock(uint bitpositon) {
-      return ((bitpositon - 1) % INT_BITS) + 1;
+      return ((bitpositon - 1) % bv_block_bits) + 1;
     }
 
     inline uint ceilOfDiv(uint dividend, uint divisor){
@@ -52,18 +53,18 @@ namespace succinct_structures{
         return 0;
       }
 
-      if(ending_pos - starting_pos + 1 > INT_BITS){
+      if(ending_pos - starting_pos + 1 > bv_block_bits){
         throw std::runtime_error("bitsread request is too big: " +
-        std::to_string(ending_pos) + " - " + std::to_string(starting_pos) + " + 1 > " + std::to_string(INT_BITS));
+        std::to_string(ending_pos) + " - " + std::to_string(starting_pos) + " + 1 > " + std::to_string(bv_block_bits));
       }
 
       auto right_position_in_block = getPositionInBlock(ending_pos);
-      auto left_block_index = ceilOfDiv(starting_pos, INT_BITS);
-      auto right_block_index = ceilOfDiv(ending_pos, INT_BITS);
+      auto left_block_index = ceilOfDiv(starting_pos, bv_block_bits);
+      auto right_block_index = ceilOfDiv(ending_pos, bv_block_bits);
 
       if(left_block_index == right_block_index){
         auto right_block = read_block_pos(right_block_index);
-        auto right_block_shifted = right_block >> ((INT_BITS - right_position_in_block));
+        auto right_block_shifted = right_block >> ((bv_block_bits - right_position_in_block));
 
         auto result = (right_block_shifted) % (1 << (ending_pos - starting_pos + 1));
         return result;
@@ -74,8 +75,8 @@ namespace succinct_structures{
       auto right_block = read_block_pos(right_block_index);
       auto left_block = read_block_pos(left_block_index);
 
-      return ((right_block >> (INT_BITS - right_position_in_block + 1)) << 1) +
-      (left_block % (1 << (INT_BITS - left_prev_position_in_block))) * (1 << right_position_in_block);
+      return ((right_block >> (bv_block_bits - right_position_in_block + 1)) << 1) +
+      (left_block % (1 << (bv_block_bits - left_prev_position_in_block))) * (1 << right_position_in_block);
 
     }
 
@@ -83,7 +84,7 @@ namespace succinct_structures{
       auto block_idx = getBlockIndex(bitposition);
       auto r = getPositionInBlock(bitposition);
       auto block = read_block_pos(block_idx); // read mode
-      return ((block >> (INT_BITS - r)) % 2) == 1;
+      return ((block >> (bv_block_bits - r)) % 2) == 1;
     }
 
     inline void bitset(uint bitposition){
@@ -91,7 +92,7 @@ namespace succinct_structures{
       auto block_idx = getBlockIndex(bitposition);
       auto &block = container.get()[block_idx - 1]; // write mode
       auto r = getPositionInBlock(bitposition);
-      block += 1 << (INT_BITS - r);
+      block += 1 << (bv_block_bits - r);
     }
 
     inline void bitclear(uint bitposition) {
@@ -99,7 +100,7 @@ namespace succinct_structures{
       auto block_idx = getBlockIndex(bitposition);
       auto &block = container.get()[block_idx - 1]; // write mode
       auto r = getPositionInBlock(bitposition);
-      block -= 1 << (INT_BITS - r);
+      block -= 1 << (bv_block_bits - r);
     }
 
     uint getBitsSize(){

@@ -12,15 +12,16 @@
 
 namespace succinct_structures{
   template<template<class> class RankPolicy = SparseSamplingTwoLevelRank,
-          template<class> class SelectPolicy = NullSelectPolicy>
-  class BVManager_ : public RankPolicy<BitVector>, public SelectPolicy<BitVector> {
+          template<class> class SelectPolicy = NullSelectPolicy,
+                  class BV = BitVector<>>
+  class BVManager_ : public RankPolicy<BV>, public SelectPolicy<BV> {
   private:
-    BitVector bv;
+    BV bv;
 
   public:
-    using RankPolicy<BitVector>::rank;
-    using SelectPolicy<BitVector>::select;
-    explicit BVManager_(uint bv_size) : bv(bv_size), RankPolicy<BitVector>(&bv), SelectPolicy<BitVector>(&bv){};
+    using RankPolicy<BV>::rank;
+    using SelectPolicy<BV>::select;
+    explicit BVManager_(uint bv_size) : bv(bv_size), RankPolicy<BV>(&bv), SelectPolicy<BV>(&bv){};
 
     inline uint rank(uint i){
       return rank(bv, i);
@@ -30,7 +31,7 @@ namespace succinct_structures{
       return select(bv, i);
     }
 
-    BitVector &getBitVector(){
+    BV &getBitVector(){
       return bv;
     };
 
@@ -62,7 +63,7 @@ namespace succinct_structures{
     }
 
     void buildRankStructure(){
-      RankPolicy<BitVector>::buildRankStructure();
+      RankPolicy<BV>::buildRankStructure();
     }
 
   };
