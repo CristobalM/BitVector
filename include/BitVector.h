@@ -14,17 +14,17 @@
 #include "CommonUtility.h"
 
 namespace succinct_structures{
-  template<typename bv_block_sz = uint32_t >
+  template<typename bv_block_t = uint32_t >
   class BitVector{
   private:
     uint bv_size;
     uint remainder;
     uint num_of_blocks;
 
-    static auto constexpr bv_block_bits = sizeof(bv_block_sz) * 8;
+    static auto constexpr bv_block_bits = sizeof(bv_block_t) * 8;
 
 
-    std::unique_ptr<bv_block_sz[]> container;
+    std::unique_ptr<bv_block_t[]> container;
 
     inline uint getBlockIndex(uint bitposition){
       return bitposition % bv_block_bits != 0 ? bitposition / bv_block_bits + 1 : bitposition / bv_block_bits;
@@ -40,6 +40,7 @@ namespace succinct_structures{
 
   public:
     explicit BitVector(uint bv_size);
+    explicit BitVector(std::unique_ptr<bv_block_t> &&container, uint32_t bv_size);
 
     uint getBVSize() const;
     void clearContainer();
