@@ -45,6 +45,8 @@ namespace succinct_structures{
     uint getBVSize() const;
     void clearContainer();
 
+    bv_block_t * bvInternal();
+
     inline uint read_block_pos(uint block_position){
       return container.get()[block_position - 1];
     }

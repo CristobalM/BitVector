@@ -31,5 +31,10 @@ namespace succinct_structures{
     num_of_blocks = remainder == 0 ? bv_size / bv_block_bits : bv_size / bv_block_bits + 1;
   }
 
+  template<typename bv_block_t>
+  bv_block_t *BitVector<bv_block_t>::bvInternal() {
+    return container.get();
+  }
+
 
 }
