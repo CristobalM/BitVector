@@ -25,7 +25,6 @@ set(INCLUDES_FILES
         AbstractSelectPolicy.h)
 
 set(SOURCES_FILES
-        BitVector.cpp
         CommonUtility.cpp)
 
 set(INCLUDES_PATHS "")

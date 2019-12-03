@@ -8,14 +8,15 @@
 #include <string>
 
 #include <memory>
+#include <cstring>
 
 #include <exception>
 
 #include "CommonUtility.h"
 
-namespace succinct_structures{
-  template<typename bv_block_t = uint32_t >
-  class BitVector{
+namespace succinct_structures {
+  template<typename bv_block_t = uint32_t>
+  class BitVector {
   private:
     uint bv_size;
     uint remainder;
@@ -26,7 +27,7 @@ namespace succinct_structures{
 
     std::unique_ptr<bv_block_t[]> container;
 
-    inline uint getBlockIndex(uint bitposition){
+    inline uint getBlockIndex(uint bitposition) {
       return bitposition % bv_block_bits != 0 ? bitposition / bv_block_bits + 1 : bitposition / bv_block_bits;
     }
 
@@ -34,38 +35,56 @@ namespace succinct_structures{
       return ((bitpositon - 1) % bv_block_bits) + 1;
     }
 
-    inline uint ceilOfDiv(uint dividend, uint divisor){
+    inline uint ceilOfDiv(uint dividend, uint divisor) {
       return (dividend / divisor) + (dividend % divisor == 0 ? 0 : 1);
     }
 
   public:
-    explicit BitVector(uint bv_size);
-    explicit BitVector(std::unique_ptr<bv_block_t[]> &&container, uint32_t bv_size);
+    explicit BitVector(uint bv_size) : bv_size(bv_size) {
+      remainder = bv_size % bv_block_bits;
+      num_of_blocks = remainder == 0 ? bv_size / bv_block_bits : bv_size / bv_block_bits + 1;
+      container = std::make_unique<bv_block_t[]>(num_of_blocks);
+      clearContainer();
+    }
 
-    uint getBVSize() const;
-    void clearContainer();
+    explicit BitVector(std::unique_ptr<bv_block_t[]> &&container, uint32_t bv_size) :
+    container(std::move(container)), bv_size(bv_size) {
+      remainder = bv_size % bv_block_bits;
+      num_of_blocks = remainder == 0 ? bv_size / bv_block_bits : bv_size / bv_block_bits + 1;
+    }
 
-    bv_block_t * bvInternal();
+    uint getBVSize() const {
+      return bv_size;
+    };
 
-    inline uint read_block_pos(uint block_position){
+    void clearContainer(){
+      std::memset(container.get(), 0, num_of_blocks);
+    };
+
+    bv_block_t *bvInternal() {
+      return container.get();
+    };
+
+    inline uint read_block_pos(uint block_position) {
       return container.get()[block_position - 1];
     }
 
-    uint bitsread(uint starting_pos, uint ending_pos){
-      if(ending_pos < starting_pos){
+    uint bitsread(uint starting_pos, uint ending_pos) {
+      if (ending_pos < starting_pos) {
         return 0;
       }
 
-      if(ending_pos - starting_pos + 1 > bv_block_bits){
+      if (ending_pos - starting_pos + 1 > bv_block_bits) {
         throw std::runtime_error("bitsread request is too big: " +
-        std::to_string(ending_pos) + " - " + std::to_string(starting_pos) + " + 1 > " + std::to_string(bv_block_bits));
+                                 std::to_string(ending_pos) + " - " + std::to_string(starting_pos) + " + 1 > " +
+                                 std::to_string(bv_block_bits));
       }
 
       auto right_position_in_block = getPositionInBlock(ending_pos);
       auto left_block_index = ceilOfDiv(starting_pos, bv_block_bits);
       auto right_block_index = ceilOfDiv(ending_pos, bv_block_bits);
 
-      if(left_block_index == right_block_index){
+      if (left_block_index == right_block_index) {
         auto right_block = read_block_pos(right_block_index);
         auto right_block_shifted = right_block >> ((bv_block_bits - right_position_in_block));
 
@@ -79,19 +98,19 @@ namespace succinct_structures{
       auto left_block = read_block_pos(left_block_index);
 
       return ((right_block >> (bv_block_bits - right_position_in_block + 1)) << 1) +
-      (left_block % (1 << (bv_block_bits - left_prev_position_in_block))) * (1 << right_position_in_block);
+             (left_block % (1 << (bv_block_bits - left_prev_position_in_block))) * (1 << right_position_in_block);
 
     }
 
-    inline bool bitread(uint bitposition){
+    inline bool bitread(uint bitposition) {
       auto block_idx = getBlockIndex(bitposition);
       auto r = getPositionInBlock(bitposition);
       auto block = read_block_pos(block_idx); // read mode
       return ((block >> (bv_block_bits - r)) % 2) == 1;
     }
 
-    inline void bitset(uint bitposition){
-      if(bitread(bitposition)) return;
+    inline void bitset(uint bitposition) {
+      if (bitread(bitposition)) return;
       auto block_idx = getBlockIndex(bitposition);
       auto &block = container.get()[block_idx - 1]; // write mode
       auto r = getPositionInBlock(bitposition);
@@ -99,14 +118,14 @@ namespace succinct_structures{
     }
 
     inline void bitclear(uint bitposition) {
-      if(!bitread(bitposition)) return;
+      if (!bitread(bitposition)) return;
       auto block_idx = getBlockIndex(bitposition);
       auto &block = container.get()[block_idx - 1]; // write mode
       auto r = getPositionInBlock(bitposition);
       block -= 1 << (bv_block_bits - r);
     }
 
-    uint getBitsSize(){
+    uint getBitsSize() {
       return bv_size;
     }
 
