@@ -1,6 +1,8 @@
 //
 // Created by cristobal, 2019
 //
+#include <exception>
+#include <stdexcept>
 
 #include "CommonUtility.h"
 
@@ -15,6 +17,13 @@ namespace succinct_structures{
 
   uint popcount_uint(uint value){
     return (uint)popcnt<uint>(value);
+  }
+
+  uint32_t popcount_generic_u32(uint32_t input) {
+#ifdef __DEFINED_BUILTIN_POPCOUNT__
+    return __builtin_popcount(input);
+#endif
+    throw std::runtime_error("popcount not defined");
   }
 
 }

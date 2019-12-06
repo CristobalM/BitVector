@@ -15,6 +15,8 @@ namespace succinct_structures{
   template < typename T > std::size_t popcnt( const T& v );
   uint popcount_uint(uint value);
 
+  uint32_t popcount_generic_u32(uint32_t input);
+
 }
 
 #endif //BITVECTOR_COMMONVALUES_H

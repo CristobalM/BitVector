@@ -12,6 +12,8 @@ else()
     message("-march=native not supported")
 endif()
 
+add_compile_definitions(__DEFINED_BUILTIN_POPCOUNT__)
+
 include_directories(include)
 
 set(INCLUDES_FILES
